@@ -1,0 +1,24 @@
+{
+    "name": "ginnerpeace/illuminate-helpers",
+    "homepage": "https://github.com/ginnerpeace/illuminate-helpers",
+    "description": "illuminate helpers extension.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "ginnerpeace",
+            "email": "ginnerpeace@live.com"
+        }
+    ],
+    "require": {
+        "php": "^7.1",
+        "illuminate/support": "*"
+    },
+    "require-dev": {
+        "psy/psysh": "^0.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zeigo\\Illuminate\\Helpers\\": "src/"
+        }
+    }
+}
