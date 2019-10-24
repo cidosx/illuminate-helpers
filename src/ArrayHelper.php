@@ -5,16 +5,13 @@ namespace Zeigo\Illuminate\Helpers;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
-/**
- * 数组辅助函数
- */
 class ArrayHelper extends Arr
 {
     /**
-     * 性能高于 array_unique 的一维数组去重
+     * Removes duplicate values from a one-dimensional array.
      *
-     * @param   array  $data
-     * @return  array
+     * @param array $data
+     * @return array
      */
     public static function unique(array $data): array
     {
@@ -22,11 +19,11 @@ class ArrayHelper extends Arr
     }
 
     /**
-     * 批量执行 array_pluck
+     * Pluck more array of values from more array.
      *
-     * @param   \ArrayAccess|array  $array
-     * @param   array  $keys
-     * @return  array
+     * @param \Traversable|array $array
+     * @param array $keys
+     * @return array
      */
     public static function pluckBatch($array, array $keys): array
     {
@@ -44,10 +41,10 @@ class ArrayHelper extends Arr
     }
 
     /**
-     * pluck 同时去重
+     * Pluck an array of values from an array and removes duplicate values.
      *
-     * @param   \ArrayAccess|array  $array
-     * @param   string  $key
+     * @param \Traversable|array $array
+     * @param string $key
      * @return  array
      */
     public static function pluckUnique($array, string $key): array
@@ -61,7 +58,6 @@ class ArrayHelper extends Arr
 
             $value = static::get($item, $key);
 
-            // 相同值仅set一次
             isset($result[$value]) || $result[$value] = true;
         }
 
@@ -69,13 +65,11 @@ class ArrayHelper extends Arr
     }
 
     /**
-     * 数组下标转驼峰
-     *     - 依赖框架 helper: Str::camel
-     *     - 默认不递归, 便于 array_map
+     * Convert all of array index to camel case.
      *
-     * @param   mixed  $data
-     * @param   bool  $recursive
-     * @return  mixed
+     * @param mixed $data
+     * @param bool $recursive
+     * @return mixed
      */
     public static function camelIndex($data, bool $recursive = false)
     {

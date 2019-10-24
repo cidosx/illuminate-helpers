@@ -2,34 +2,29 @@
 
 namespace Zeigo\Illuminate\Helpers;
 
-use InvalidArgumentException;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 /**
- * 处理csv的辅助函数
+ * Format data as CSV.
  */
 class CsvHelper
 {
-    /** end of line */
     const EOL = "\r\n";
 
-    /** 字符定界 */
-    const ENCLOSURE = '"';
-
-    /** 默认逗号分隔符 */
     const DELIMITER = ',';
 
     /**
-     * 保存为csv文件
+     * Save data to CSV file.
      *
-     * @param   string  $filePathName
-     * @param   array  $data
-     * @param   bool  $overwrite
-     * @return  string
+     * @param string $filePathName
+     * @param array $data
+     * @param bool $overwrite
+     * @return string
      */
-    public static function store(string $filePathName, array $data, bool $overwrite = false): string
+    public static function save(string $filePathName, array $data, bool $overwrite = false): string
     {
-        if (strrchr($filePathName, '.csv') !== '.csv') {
+        if (! Str::endsWith($filePathName, '.csv')) {
             throw new InvalidArgumentException('The file extension must be .csv');
         }
 
@@ -37,28 +32,28 @@ class CsvHelper
             throw new InvalidArgumentException('Missing required data for rows.');
         }
 
-        if (is_file($filePathName) && !$overwrite) {
+        if (is_file($filePathName) && ! $overwrite) {
             throw new InvalidArgumentException('File already exists.');
         }
 
         $resource = fopen($filePathName, 'w');
 
-        // 添加bom头
-        // EFBBBF 为 utf8 bom
+        // utf8 bom
         fwrite($resource, pack('H*', 'EFBBBF'));
 
         self::writeFile($resource, $data);
 
         fclose($resource);
-        return self::resolveProjectRealPath($filePathName);
+
+        return self::parseToRealPath($filePathName);
     }
 
     /**
-     * 以追加方式写文件 (不检查文件后缀)
+     * Data writes are always appended.
      *
-     * @param   string  $filePathName
-     * @param   array  $data
-     * @return  string
+     * @param string $filePathName
+     * @param array $data
+     * @return string
      */
     public static function append(string $filePathName, array $data): string
     {
@@ -66,7 +61,7 @@ class CsvHelper
             throw new InvalidArgumentException('Missing required data for rows.');
         }
 
-        if (!is_file($filePathName)) {
+        if (! is_file($filePathName)) {
             throw new InvalidArgumentException('File not exists.');
         }
 
@@ -75,27 +70,26 @@ class CsvHelper
         self::writeFile($resource, $data);
 
         fclose($resource);
-        return self::resolveProjectRealPath($filePathName);
+
+        return self::parseToRealPath($filePathName);
     }
 
     /**
-     * 下载文件
+     * Send file content to output buffer.
      *
-     * @param   string  $filename
-     * @param   array  $data
-     * @return  void
+     * @param string $filename
+     * @param array $data
+     * @return void
      */
     public static function download(string $filename, array $data)
     {
-        // 类似的逻辑, 但结果变为输出到浏览器
-
         if (empty($data['rows'])) {
             throw new InvalidArgumentException('Missing required data for rows.');
         }
 
-        // 自动加上文件后缀
+        // Append file suffix.
         $filename = trim($filename);
-        if (strrchr($filename, '.csv') !== '.csv') {
+        if (! Str::endsWith($filename, '.csv')) {
             $filename .= '.csv';
         }
 
@@ -108,19 +102,13 @@ class CsvHelper
         header('Expires:Mon, 26 Jul 1997 05:00:00 GMT');
         header('Pragma:public');
 
-        // 添加bom头
-        // EFBBBF 为 utf8 bom
+        // utf8 bom
         echo pack('H*', 'EFBBBF');
 
-        // 自定义一个数组header, 与cell分开处理
-        if (!empty($data['header'])) {
-            echo self::ENCLOSURE
-            . join(self::ENCLOSURE . self::DELIMITER . self::ENCLOSURE, $data['header'])
-            . self::ENCLOSURE
-            . self::EOL;
+        if (! empty($data['header'])) {
+            echo '"' . join('"' . self::DELIMITER . '"', $data['header']) . '"' . self::EOL;
         }
 
-        // cell中需要判断是否为长数字
         foreach ($data['rows'] as $row) {
             if (is_array($row)) {
                 echo rtrim(self::formatRows($row), self::DELIMITER) . self::EOL;
@@ -129,14 +117,11 @@ class CsvHelper
             }
         }
 
-        // 输出缓冲区的内容到浏览器
         ob_end_flush();
-
-        exit;
+        exit(0);
     }
 
-    /** TODO: 预留的方法, 返回项目目录的绝对路径, 之后完成时需要考虑软连接情况 */
-    private static function resolveProjectRealPath(string $path): string
+    private static function parseToRealPath(string $path): string
     {
         return $path;
     }
@@ -153,23 +138,17 @@ class CsvHelper
 
         foreach ($rowData as $idx => $cell) {
             if (is_numeric($cell)) {
-                // 使用特殊下标来处理需要格式化的单元格
                 if (Str::startsWith($idx, 'CELL_FMT_')) {
                     /**
-                     * csv 数字格式 -> ="00001"
+                     * CSV empty formula
+                     * ="00001"
                      */
-                    $contents .= '=' . self::ENCLOSURE . $cell . self::ENCLOSURE . self::DELIMITER;
+                    $contents .= '="' . $cell . '"' . self::DELIMITER;
                 } else {
-                    // 不处理此类数据, 一般为金额数量等需要计算的
-                    $contents .= self::ENCLOSURE . $cell . self::ENCLOSURE . self::DELIMITER;
+                    $contents .= '"' . $cell . '"' . self::DELIMITER;
                 }
             } else {
-                // 转义内容中的引号
-                $contents .= self::ENCLOSURE . str_replace(
-                    self::ENCLOSURE,
-                    self::ENCLOSURE . self::ENCLOSURE,
-                    $cell
-                ) . self::ENCLOSURE . self::DELIMITER;
+                $contents .= '"' . str_replace('"', '""', $cell) . '"' . self::DELIMITER;
             }
         }
 
@@ -177,23 +156,21 @@ class CsvHelper
     }
 
     /**
-     * 写文件
+     * Write file.
      *
-     * @param   resource  $resource
-     * @param   array  $data
-     * @return  void
+     * @param resource $resource
+     * @param array $data
+     * @return void
      */
     private static function writeFile($resource, array $data)
     {
-        // 自定义一个数组header, 与cell分开处理
-        if (!empty($data['header'])) {
-            fwrite($resource, self::ENCLOSURE
-                . join(self::ENCLOSURE . self::DELIMITER . self::ENCLOSURE, $data['header'])
-                . self::ENCLOSURE
-                . self::EOL);
+        if (! empty($data['header'])) {
+            fwrite(
+                $resource,
+                '"' . join('"' . self::DELIMITER . '"', $data['header']) . '"' . self::EOL
+            );
         }
 
-        // cell中需要判断是否为长数字
         foreach ($data['rows'] as $row) {
             if (is_array($row)) {
                 fwrite($resource, rtrim(self::formatRows($row), self::DELIMITER) . self::EOL);

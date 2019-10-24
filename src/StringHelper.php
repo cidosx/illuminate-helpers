@@ -5,36 +5,28 @@ namespace Zeigo\Illuminate\Helpers;
 use Illuminate\Support\Str;
 use UnexpectedValueException;
 
-/**
- * 字符串辅助函数
- */
 class StringHelper extends Str
 {
     /**
-     * 将 inSet 函数解析的数组缓存起来.
-     *     - 避免多次调用 explode
-     *
+     * The cache of string sets.
      * @var array
      */
     protected static $insetCache = [];
 
     /**
-     * 生成随机字符串
+     * Generate a more truly "random" string
      *
-     * @param  string $type
-     * @param  int    $len
-     *
+     * @param string $type
+     * @param int $len
      * @return string
      */
-    public static function randomString($type = 'distinct_alnum', $len = 8): string
+    public static function randomString(string $type = 'distinct_alnum', $len = 8): string
     {
         switch ($type) {
             case 'distinct_alnum':
-                // 易识别的字符
                 $pool = '3456789abcdefghijkmnpqrstuvwxyABCDEFGHIJKLMNPQRSTUVWXY';
                 break;
             case 'numeric':
-                // 前位补零
                 return str_pad(mt_rand(0, str_repeat(9, $len)), $len, '0', STR_PAD_LEFT);
             case 'alnum':
                 $pool = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -61,12 +53,12 @@ class StringHelper extends Str
     }
 
     /**
-     * 判断一个值是否在给定的字符集合中
+     * Determine if a given string in a regular string sets.
      *
-     * @param   string  $needle
-     * @param   string  $haystack
-     * @param   string  $separator
-     * @return  bool
+     * @param string $needle
+     * @param string $haystack
+     * @param string $separator
+     * @return bool
      */
     public static function inSet(string $needle, string $haystack, string $separator = ','): bool
     {

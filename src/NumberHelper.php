@@ -4,84 +4,85 @@ namespace Zeigo\Illuminate\Helpers;
 
 use InvalidArgumentException;
 
-/**
- * 数值辅助函数
- */
 class NumberHelper
 {
     /**
-     * 返回字符值的round结果
+     * Rounds a float and return string cast result.
      *
-     * @param   float|null  $num
-     * @param   int  $precision
-     * @return  string
+     * @param float|null $value
+     * @param int $precision
+     * @param int $mode
+     * @return string
      */
-    public static function round(float $num = null, int $precision = 0): string
+    public static function round(float $value = null, int $precision = 0, int $mode = PHP_ROUND_HALF_UP): string
     {
-        return strval(round($num, $precision));
+        return strval(round($value, $precision, $mode));
     }
 
     /**
-     * 检查float小数位数是否符合要求
+     * Determine given float decimal places.
      *
-     * @param   float  $number
-     * @param   int  $decimals
-     * @return  bool
+     * @param float $value
+     * @param int $decimals
+     * @return bool
      */
-    public static function checkDecimal(float $number, int $decimals): bool
+    public static function checkDecimal(float $value, int $decimals): bool
     {
-        return 1 === preg_match('/^[0-9]+(.[0-9]{1,' . $decimals . '})?$/', abs($number));
+        return 1 === preg_match('/^[0-9]+(.[0-9]{1,' . $decimals . '})?$/', abs($value));
     }
 
     /**
-     * 精确的向上取整
+     * Round fractions up exactly.
      *
-     *   解决下列情况下的取整精度
-     *   >>> $num = 0
-     *   => 0
-     *   >>> $num += (837.000/8.37)
-     *   => 100.0
-     *   >>> ceil($num)
-     *   => 101.0
-     *   >>> Sunong\Component\Helpers\NumberHelper::strictCeil($num)
-     *   => 100
-     *
-     * @param   numeric  $value
-     * @return  int
+     * @param numeric $value
+     * @return int
      */
     public static function ceil($value): int
     {
+        ///////////////////////////////
+        // Resolve such a case like: //
+        ///////////////////////////////
+        // >>> $num = 0
+        // => 0
+        // >>> $num += (837.000/8.37)
+        // => 100.0
+        // >>> ceil($num)
+        // => 101.0
+        // >>> Zeigo\Illuminate\Helpers\NumberHelper::ceil($num)
+        // => 100
+        ///////////////////////////////
+
         return intval(ceil(strval($value)));
     }
 
     /**
-     * 舍位法取指定小数位数
+     * Round fractions down for float and return string cast result.
      *
-     * @param   float  $number
-     * @param   int  $decimals
-     * @return  string
+     * @param float $value
+     * @param int $decimals
+     * @return string
      */
-    public static function floorDecimal(float $number, int $decimals): string
+    public static function floorDecimal(float $value, int $decimals): string
     {
         if (0 > $decimals || 13 < $decimals) {
-            throw new InvalidArgumentException('你是不是有毒');
+            throw new InvalidArgumentException('Hmmmmmmm.');
         }
 
-        if (0 < $number) {
-            return strval(floor(strval($number * $digit = pow(10, $decimals))) / $digit);
+        if (0 < $value) {
+            return strval(floor(strval($value * $digit = pow(10, $decimals))) / $digit);
         } else {
-            return strval(ceil(strval($number * $digit = pow(10, $decimals))) / $digit);
+            return strval(ceil(strval($value * $digit = pow(10, $decimals))) / $digit);
         }
     }
 
     /**
-     * 计算百分比
+     * A percentage printer.
      *
-     * @param   float|null  $dividend
-     * @param   float  $divisor
-     * @param   int  $decimals
-     * @param   bool  $percentSign  可选附加百分号用于输出
-     * @return  string
+     * @param float|null $dividend
+     * @param float $divisor
+     * @param int $decimals
+     * @param bool $percentSign
+     * @return string
      */
     public static function percentage(float $dividend = null, float $divisor, int $decimals = 2, bool $percentSign = true): string
     {
