@@ -127,7 +127,7 @@ class CsvHelper
     }
 
     /**
-     * 格式化每行的数据
+     * Formatting each row.
      *
      * @param   array  $rowData
      * @return  string
